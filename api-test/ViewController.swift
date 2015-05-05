@@ -7,12 +7,40 @@
 //
 
 import UIKit
+import Foundation
 
 class ViewController: UIViewController {
 
+    @IBAction func buttonTouched(sender: AnyObject) {
+        let url = NSURL(string: "<some endpoint>/<some resource>/1")
+        
+        let started = NSDate()
+        let task = NSURLSession.sharedSession().dataTaskWithURL(url!) {(data, response, error) in
+            var error: NSError?
+            if let json: NSDictionary = NSJSONSerialization.JSONObjectWithData(data!, options:
+                NSJSONReadingOptions.MutableContainers, error: nil) as? NSDictionary {
+                    let interval = NSDate().timeIntervalSinceDate(started)
+                    var ti = NSInteger(interval)
+                    var ms = String(Int((interval % 1) * 1000))
+                    
+                    if let result = json["result"] as? NSDictionary {
+                        if let data = result["data"] as? NSDictionary {
+                            if let recipe = data["recipe"] as? NSDictionary {
+                                if let title = recipe["title"] as? NSString {
+                                    var alert = UIAlertController(title: "Recipe", message: "Retrieved: " + (title as String) + " in " + ms + " ms" as String, preferredStyle: UIAlertControllerStyle.Alert)
+                                    alert.addAction(UIAlertAction(title: "Close", style: UIAlertActionStyle.Default, handler: nil))
+                                    self.presentViewController(alert, animated: true, completion: nil)
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+        
+        task.resume()
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
     }
 
     override func didReceiveMemoryWarning() {
